@@ -22,6 +22,7 @@ const duplicateKeyErrorHandler = (err) => {
 }
 
 const validationErrorHandler = (err) => {
+
     const errors = Object.values(err.errors).map(val => val.message);
     const errorMessages = errors.join('. ');
     const msg = `Invalid input data: ${errorMessages}`;
