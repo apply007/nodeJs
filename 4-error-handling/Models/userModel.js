@@ -24,16 +24,22 @@ const userSchema = new mongoose.Schema({
   confirmPassword: {
     type: String,
     required: [true, "Please confirm your password."],
+    validate: {
+      validator: function (val) {
+        return val === this.password;
+      },
+      message: "Password and confirm password does not match",
+    },
   },
 });
 
-userSchema.pre("save",async function (next) {
+userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     return next();
   }
-  this.password =await bcryptjs.hash(this.password, 12);
-this.confirmPassword=undefined
-next()
+  this.password = await bcryptjs.hash(this.password, 12);
+  this.confirmPassword = undefined;
+  next();
 });
 
 const User = mongoose.model("User", userSchema);
