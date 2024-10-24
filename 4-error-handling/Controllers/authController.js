@@ -1,6 +1,7 @@
 const User = require("./../Models/userModel");
 const asyncErrorHandler = require("./../Utils/asyncErrorHandler");
 const jwt = require("jsonwebtoken");
+const util = require("util");
 
 const CustomError = require("./../Utils/CustomError");
 
@@ -12,6 +13,7 @@ const signToken = (id) => {
     process.env.SECRET_STR,
     {
       expiresIn: process.env.LOGIN_EXPIRES,
+      
     }
   );
 };
@@ -42,7 +44,7 @@ exports.login = asyncErrorHandler(async (req, res, next) => {
 
   const user = await User.findOne({ email }).select("+password");
 
-  if (!user || !(await user.comparePasswordInDb( password,user.password))) {
+  if (!user || !(await user.comparePasswordInDb(password, user.password))) {
     const error = new CustomError("Incorrect email password", 400);
     return next(error);
   }
@@ -52,4 +54,20 @@ exports.login = asyncErrorHandler(async (req, res, next) => {
     token,
     user: user,
   });
+});
+
+exports.protect = asyncErrorHandler(async (req, res, next) => {
+  const testToken = req.headers.authorization;
+  let token;
+  if (testToken && testToken.startsWith("bearer")) {
+    token = testToken.split(" ")[1];
+  }
+  if (!token) {
+    next(new CustomError("You are not Logged in", 401));
+  }
+  const decodedToken = await util.promisify
+( jwt.verify)(token, process.env.SECRET_STR)
+  ;
+  console.log(decodedToken);
+  next();
 });

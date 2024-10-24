@@ -4,6 +4,7 @@ const ApiFeatures = require("./../Utils/ApiFeatures");
 const asyncErrorHandler = require("./../Utils/asyncErrorHandler");
 const CustomError = require("./../Utils/CustomError");
 
+
 exports.getHighestRated = (req, res, next) => {
   req.query.limit = "5";
   req.query.sort = "-ratings";
