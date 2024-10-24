@@ -58,7 +58,7 @@ exports.login = asyncErrorHandler(async (req, res, next) => {
 exports.protect = asyncErrorHandler(async (req, res, next) => {
   const testToken = req.headers.authorization;
   let token;
-  if (testToken && testToken.startsWith("bearer")) {
+  if (testToken && testToken.startsWith("Bearer")) {
     token = testToken.split(" ")[1];
   }
   if (!token) {
@@ -73,7 +73,7 @@ exports.protect = asyncErrorHandler(async (req, res, next) => {
     const error = new CustomError("User with token does not exists", 401);
     next(error);
   }
-const isPasswordChanged=await user.isPasswordChanged(decodedToken.iat)
+  const isPasswordChanged = await user.isPasswordChanged(decodedToken.iat);
   if (isPasswordChanged) {
     const error = new CustomError("Password is changed pls login", 401);
     return next(error);
@@ -81,3 +81,34 @@ const isPasswordChanged=await user.isPasswordChanged(decodedToken.iat)
   req.user = user;
   next();
 });
+
+// exports.restrict = (...role) => {
+//   return (req, res, next) => {
+//     //if (req.user.role !== role) 
+//     if (!role.includes(req.user.role) ) {
+//       const error = new CustomError("You are not Authorize", 401);
+//       return next(error);
+//     }
+
+//     next();
+//   };
+// };
+exports.restrict = (role) => {
+  return (req, res, next) => {
+    if (req.user.role !== role) 
+     {
+      const error = new CustomError("You are not Authorize", 401);
+      return next(error);
+    }
+
+    next();
+  };
+};
+
+
+exports.forgotPassword=(req,res,next)=>{
+
+}
+exports.passwordReset=(req,res,next)=>{
+
+}
