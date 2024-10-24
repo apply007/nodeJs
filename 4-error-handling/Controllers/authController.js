@@ -13,7 +13,6 @@ const signToken = (id) => {
     process.env.SECRET_STR,
     {
       expiresIn: process.env.LOGIN_EXPIRES,
-      
     }
   );
 };
@@ -65,9 +64,20 @@ exports.protect = asyncErrorHandler(async (req, res, next) => {
   if (!token) {
     next(new CustomError("You are not Logged in", 401));
   }
-  const decodedToken = await util.promisify
-( jwt.verify)(token, process.env.SECRET_STR)
-  ;
-  console.log(decodedToken);
+  const decodedToken = await util.promisify(jwt.verify)(
+    token,
+    process.env.SECRET_STR
+  );
+  const user = await User.findById(decodedToken.id);
+  if (!user) {
+    const error = new CustomError("User with token does not exists", 401);
+    next(error);
+  }
+const isPasswordChanged=await user.isPasswordChanged(decodedToken.iat)
+  if (isPasswordChanged) {
+    const error = new CustomError("Password is changed pls login", 401);
+    return next(error);
+  }
+  req.user = user;
   next();
 });

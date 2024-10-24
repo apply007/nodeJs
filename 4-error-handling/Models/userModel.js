@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, "Please enter a password."],
     minlength: 8,
-    select:false
+    select: false,
   },
   confirmPassword: {
     type: String,
@@ -32,6 +32,7 @@ const userSchema = new mongoose.Schema({
       message: "Password and confirm password does not match",
     },
   },
+  passwordChangedAt: Date,
 });
 
 userSchema.pre("save", async function (next) {
@@ -43,10 +44,20 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-userSchema.methods.comparePasswordInDb=async function (paswd,pswdDB) {
-// const t= await bcryptjs.compare(paswd,pswdDB)
-  return await bcryptjs.compare(paswd,pswdDB)
-}
+userSchema.methods.comparePasswordInDb = async function (paswd, pswdDB) {
+  // const t= await bcryptjs.compare(paswd,pswdDB)
+  return await bcryptjs.compare(paswd, pswdDB);
+};
+userSchema.methods.isPasswordChanged = async function (JWTTimeStamp) {
+  if (this.passwordChangedAt) {
+    const passwordChangedTimeStamp = parseInt(
+      this.passwordChangedAt.getTime() / 1000
+    );
+    console.log(passwordChangedTimeStamp, JWTTimeStamp);
+    return JWTTimeStamp < passwordChangedTimeStamp;
+  }
+  return false;
+};
 
 const User = mongoose.model("User", userSchema);
 

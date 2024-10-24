@@ -18,7 +18,7 @@ router.route('/')
 
 
 router.route('/:id')
-    .get(moviesController.getMovie)
+    .get(authController.protect,moviesController.getMovie)
     .patch(moviesController.updateMovie)
     .delete(moviesController.deleteMovie)
 
