@@ -2,7 +2,7 @@ const User = require("./../Models/userModel");
 const asyncErrorHandler = require("./../Utils/asyncErrorHandler");
 const jwt = require("jsonwebtoken");
 const util = require("util");
-
+const sendEmail = require("./../Utils/email");
 const CustomError = require("./../Utils/CustomError");
 
 const signToken = (id) => {
@@ -114,8 +114,28 @@ exports.forgotPassword = asyncErrorHandler(async (req, res, next) => {
     );
     next(error);
   }
-  const resetToken = user.createResetPasswordToken();
-  await user.save({validateBeforeSave:false});
+  const resetToken =await user.createResetPasswordToken();
+  await user.save({ validateBeforeSave: false });
+  const resetUrl = `${req.protocol}://${req.get(
+    "host"
+  )}/api/v1/users/resetPassword/${resetToken}`;
+  const message = `We have received password reset request.please use the link \n\n${resetUrl}\n\n valid for 10 min`;
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: "Password change req received",
+      message: message,
+    });
+    res.status(200).json({
+      status: "success",
+      message: "password reset link send to your email",
+    });
+  } catch (error) {
+    user.passwordResetToken = undefined;
+    user.passwordResetTokenExpires = undefined;
+   await user.save({ validateBeforeSave: false });
+    return next(new CustomError("There was error reset pass..", 500));
+  }
 });
 
 exports.resetPassword = (req, res, next) => {};
