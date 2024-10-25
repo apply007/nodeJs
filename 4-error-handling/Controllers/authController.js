@@ -84,7 +84,7 @@ exports.protect = asyncErrorHandler(async (req, res, next) => {
 
 // exports.restrict = (...role) => {
 //   return (req, res, next) => {
-//     //if (req.user.role !== role) 
+//     //if (req.user.role !== role)
 //     if (!role.includes(req.user.role) ) {
 //       const error = new CustomError("You are not Authorize", 401);
 //       return next(error);
@@ -95,8 +95,7 @@ exports.protect = asyncErrorHandler(async (req, res, next) => {
 // };
 exports.restrict = (role) => {
   return (req, res, next) => {
-    if (req.user.role !== role) 
-     {
+    if (req.user.role !== role) {
       const error = new CustomError("You are not Authorize", 401);
       return next(error);
     }
@@ -105,10 +104,18 @@ exports.restrict = (role) => {
   };
 };
 
+exports.forgotPassword = asyncErrorHandler(async (req, res, next) => {
+  const user = await User.findOne({ email: req.body.email });
 
-exports.forgotPassword=(req,res,next)=>{
+  if (!user) {
+    const error = new CustomError(
+      "We could not find user with given email",
+      404
+    );
+    next(error);
+  }
+  const resetToken = user.createResetPasswordToken();
+  await user.save({validateBeforeSave:false});
+});
 
-}
-exports.passwordReset=(req,res,next)=>{
-
-}
+exports.resetPassword = (req, res, next) => {};
