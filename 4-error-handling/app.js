@@ -4,6 +4,9 @@ const morgan = require("morgan");
 const moviesRouter = require("./Routes/moviesRoutes");
 const rateLimit = require("express-rate-limit");
 const helmet = require("helmet");
+const sanitize = require("express-mongo-sanitize");
+const xss = require("xss-clean");
+
 const authRouter = require("./Routes/authRouter");
 const userRouter = require("./Routes/userRoute");
 const CustomError = require("./Utils/CustomError");
@@ -25,6 +28,8 @@ app.use(
     limit: "10kb",
   })
 );
+app.use(sanitize());
+app.use(xss());
 
 app.use(express.static("./public"));
 
