@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const util = require("util");
 const sendEmail = require("./../Utils/email");
 const CustomError = require("./../Utils/CustomError");
-const crypto=require('crypto')
+const crypto = require("crypto");
 
 const signToken = (id) => {
   return jwt.sign(
@@ -18,18 +18,19 @@ const signToken = (id) => {
   );
 };
 
+const createSendResponse = (user, statusCode, res) => {
+  const token = signToken(user._id);
+  res.status(statusCode).json({
+    status: "success",
+    token,
+    user,
+  });
+};
+
 exports.signup = asyncErrorHandler(async (req, res, next) => {
   const newUser = await User.create(req.body);
 
-  const token = signToken(newUser._id);
-
-  res.status(201).json({
-    status: "success",
-    token,
-    data: {
-      user: newUser,
-    },
-  });
+  createSendResponse(newUser, 201, res);
 });
 
 exports.login = asyncErrorHandler(async (req, res, next) => {
@@ -48,12 +49,7 @@ exports.login = asyncErrorHandler(async (req, res, next) => {
     const error = new CustomError("Incorrect email password", 400);
     return next(error);
   }
-  const token = signToken(user._id);
-  res.status(200).json({
-    status: "success",
-    token,
-    user: user,
-  });
+  createSendResponse(user, 200, res);
 });
 
 exports.protect = asyncErrorHandler(async (req, res, next) => {
@@ -160,10 +156,18 @@ exports.resetPassword = asyncErrorHandler(async (req, res, next) => {
   user.passwordResetTokenExpires = undefined;
   user.passwordChangedAt = Date.now();
   user.save();
-  const loginToken = signToken(user._id);
-  res.status(200).json({
-    status: "success",
-    token:loginToken,
-    user: user,
-  }); 
+  createSendResponse(user, 200, res);
+});
+
+exports.updatePassword = asyncErrorHandler(async (req, res, next) => {
+  const user = await User.findById(req.user._id).select("+password");
+  if (
+    !(await user.comparePasswordInDb(req.body.currentPassword, user.password))
+  ) {
+    return next(new CustomError("current password is wrong", 401));
+  }
+  user.password = req.body.password;
+  user.confirmPassword = req.body.confirmPassword;
+  await user.save();
+  createSendResponse(user, 200, res);
 });
