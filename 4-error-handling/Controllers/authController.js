@@ -6,10 +6,6 @@ const sendEmail = require("./../Utils/email");
 const CustomError = require("./../Utils/CustomError");
 const crypto = require("crypto");
 
-
-
-
-
 const signToken = (id) => {
   return jwt.sign(
     {
@@ -24,10 +20,21 @@ const signToken = (id) => {
 
 const createSendResponse = (user, statusCode, res) => {
   const token = signToken(user._id);
+
+  const option = {
+    maxAge: process.env.LOGIN_EXPIRES,
+
+    httpOnly: true,
+  };
+  if (process.env.NODE_ENV === "production") {
+    option.secure = true;
+  }
+  res.cookie("jwt", token, option);
+  user.password = undefined;
   res.status(statusCode).json({
     status: "success",
     token,
-    user,
+    data: { user },
   });
 };
 
