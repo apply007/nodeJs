@@ -158,16 +158,3 @@ exports.resetPassword = asyncErrorHandler(async (req, res, next) => {
   user.save();
   createSendResponse(user, 200, res);
 });
-
-exports.updatePassword = asyncErrorHandler(async (req, res, next) => {
-  const user = await User.findById(req.user._id).select("+password");
-  if (
-    !(await user.comparePasswordInDb(req.body.currentPassword, user.password))
-  ) {
-    return next(new CustomError("current password is wrong", 401));
-  }
-  user.password = req.body.password;
-  user.confirmPassword = req.body.confirmPassword;
-  await user.save();
-  createSendResponse(user, 200, res);
-});
