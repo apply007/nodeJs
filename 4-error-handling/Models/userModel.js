@@ -38,6 +38,11 @@ const userSchema = new mongoose.Schema({
       message: "Password and confirm password does not match",
     },
   },
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
   passwordChangedAt: Date,
   passwordResetToken: String,
   passwordResetTokenExpires: Date,
@@ -49,6 +54,10 @@ userSchema.pre("save", async function (next) {
   }
   this.password = await bcryptjs.hash(this.password, 12);
   this.confirmPassword = undefined;
+  next();
+});
+userSchema.pre(/^find/, async function (next) {
+this.find({active:{$ne:false}})
   next();
 });
 
@@ -68,15 +77,15 @@ userSchema.methods.isPasswordChanged = async function (JWTTimeStamp) {
 };
 
 userSchema.methods.createResetPasswordToken = async function () {
-  const resetToken = crypto.randomBytes(32).toString('hex');
+  const resetToken = crypto.randomBytes(32).toString("hex");
   this.passwordResetToken = crypto
     .createHash("sha256")
     .update(resetToken)
     .digest("hex");
 
-    this.passwordResetTokenExpires=Date.now()+10*60*1000
-    console.log(resetToken,this.passwordResetToken)
-    return resetToken
+  this.passwordResetTokenExpires = Date.now() + 10 * 60 * 1000;
+  console.log(resetToken, this.passwordResetToken);
+  return resetToken;
 };
 
 const User = mongoose.model("User", userSchema);
